@@ -31,6 +31,86 @@ public interface AbcListener extends ParseTreeListener {
    */
   void exitHead(AbcParser.HeadContext ctx);
   /**
+   * Enter a parse tree produced by {@link AbcParser#x}.
+   * @param ctx the parse tree
+   */
+  void enterX(AbcParser.XContext ctx);
+  /**
+   * Exit a parse tree produced by {@link AbcParser#x}.
+   * @param ctx the parse tree
+   */
+  void exitX(AbcParser.XContext ctx);
+  /**
+   * Enter a parse tree produced by {@link AbcParser#t}.
+   * @param ctx the parse tree
+   */
+  void enterT(AbcParser.TContext ctx);
+  /**
+   * Exit a parse tree produced by {@link AbcParser#t}.
+   * @param ctx the parse tree
+   */
+  void exitT(AbcParser.TContext ctx);
+  /**
+   * Enter a parse tree produced by {@link AbcParser#c}.
+   * @param ctx the parse tree
+   */
+  void enterC(AbcParser.CContext ctx);
+  /**
+   * Exit a parse tree produced by {@link AbcParser#c}.
+   * @param ctx the parse tree
+   */
+  void exitC(AbcParser.CContext ctx);
+  /**
+   * Enter a parse tree produced by {@link AbcParser#l}.
+   * @param ctx the parse tree
+   */
+  void enterL(AbcParser.LContext ctx);
+  /**
+   * Exit a parse tree produced by {@link AbcParser#l}.
+   * @param ctx the parse tree
+   */
+  void exitL(AbcParser.LContext ctx);
+  /**
+   * Enter a parse tree produced by {@link AbcParser#m}.
+   * @param ctx the parse tree
+   */
+  void enterM(AbcParser.MContext ctx);
+  /**
+   * Exit a parse tree produced by {@link AbcParser#m}.
+   * @param ctx the parse tree
+   */
+  void exitM(AbcParser.MContext ctx);
+  /**
+   * Enter a parse tree produced by {@link AbcParser#q}.
+   * @param ctx the parse tree
+   */
+  void enterQ(AbcParser.QContext ctx);
+  /**
+   * Exit a parse tree produced by {@link AbcParser#q}.
+   * @param ctx the parse tree
+   */
+  void exitQ(AbcParser.QContext ctx);
+  /**
+   * Enter a parse tree produced by {@link AbcParser#v}.
+   * @param ctx the parse tree
+   */
+  void enterV(AbcParser.VContext ctx);
+  /**
+   * Exit a parse tree produced by {@link AbcParser#v}.
+   * @param ctx the parse tree
+   */
+  void exitV(AbcParser.VContext ctx);
+  /**
+   * Enter a parse tree produced by {@link AbcParser#k}.
+   * @param ctx the parse tree
+   */
+  void enterK(AbcParser.KContext ctx);
+  /**
+   * Exit a parse tree produced by {@link AbcParser#k}.
+   * @param ctx the parse tree
+   */
+  void exitK(AbcParser.KContext ctx);
+  /**
    * Enter a parse tree produced by {@link AbcParser#body}.
    * @param ctx the parse tree
    */
@@ -60,16 +140,6 @@ public interface AbcListener extends ParseTreeListener {
    * @param ctx the parse tree
    */
   void exitSection(AbcParser.SectionContext ctx);
-  /**
-   * Enter a parse tree produced by {@link AbcParser#segment}.
-   * @param ctx the parse tree
-   */
-  void enterSegment(AbcParser.SegmentContext ctx);
-  /**
-   * Exit a parse tree produced by {@link AbcParser#segment}.
-   * @param ctx the parse tree
-   */
-  void exitSegment(AbcParser.SegmentContext ctx);
   /**
    * Enter a parse tree produced by {@link AbcParser#element}.
    * @param ctx the parse tree
@@ -130,4 +200,14 @@ public interface AbcListener extends ParseTreeListener {
    * @param ctx the parse tree
    */
   void exitLength(AbcParser.LengthContext ctx);
+  /**
+   * Enter a parse tree produced by {@link AbcParser#segment}.
+   * @param ctx the parse tree
+   */
+  void enterSegment(AbcParser.SegmentContext ctx);
+  /**
+   * Exit a parse tree produced by {@link AbcParser#segment}.
+   * @param ctx the parse tree
+   */
+  void exitSegment(AbcParser.SegmentContext ctx);
 }
