@@ -6,25 +6,27 @@
 grammar Abc;
 import Configuration;
 
-root: head body EOF;
+//root: head body EOF;
+root: segment EOF;
 
 head: X T (C | L | M | Q | V)* K;
-X: 'X:' INDEX;
-T: 'T:' STRING;
-C: 'C:' STRING;
-L: 'L:' NUMBER '/' NUMBER;
-M: 'M:' NUMBER '/' NUMBER;
-Q: 'Q:' NUMBER '/' NUMBER '=' NUMBER;
-V: 'V:' STRING;
-K: 'K:' ;
+X: 'X:' INDEX NEWLINE;
+T: 'T:' STRING NEWLINE;
+C: 'C:' STRING NEWLINE;
+L: 'L:' NUMBER '/' NUMBER NEWLINE;
+M: 'M:' NUMBER '/' NUMBER NEWLINE;
+Q: 'Q:' NUMBER '/' NUMBER '=' NUMBER NEWLINE;
+V: 'V:' STRING NEWLINE;
+K: 'K:C' NEWLINE;
 
-body: voice+;
-voice: V? (section SECTIONBAR)+;
-section: (segment BAR?)+;
-segment: element+;
+body: (voice NEWLINE)+;
+voice: (V)? (section SECTIONBAR)+ NEWLINE;
+section: segment (BAR segment)*;
+segment : NOTECHAR (SPACES NOTECHAR)*;
 element: rest | note | chord | tuplet;
+
 rest: REST length?;
-note: ACCIDENTAL? NOTE OCTAVE? length?;
+note: (ACCIDENTAL)? NOTECHAR (OCTAVE)? (length)?;
 chord: '[' note+ ']';
 tuplet: '(' TUPLETLENGTH note+;
 length: NUMBER? '/' NUMBER?;
@@ -34,13 +36,13 @@ BAR: ('|' | ':|' | '|:') ('[1' | '[2')?;
 REST: 'z';
 TUPLETLENGTH: '2' | '3' | '4';
 ACCIDENTAL: '^' | '^^' | '=' | '_' | '__';
-NOTE: [a-gA-G];
+NOTECHAR: [a-zA-Z]+;
 OCTAVE: '_'+ | '\''+;
 
-STRING: [0-9a-zA-Z.,-_ ]+;
+STRING: [a-zA-Z,\-_ ]+;
 NUMBER: [1-9][0-9]*;
 INDEX: [0-9]+;
 
-SPACES: [ ]+ -> skip;
-TABS: [	]+ -> skip;
+SPACES: [ ]+;
+NEWLINE: '\r'? '\n';
 
