@@ -1,12 +1,15 @@
 package abc;
 
-public class AbcMusicSection{
+import java.util.List;
+import java.util.ArrayList;
+
+public class AbcMusicSection implements AbcMusic{
     private List<AbcMusic> notes = new ArrayList<>();
-    private List<Int> repeatEnds = new ArrayList<>();
-    private List<Int> repeatStarts = new ArrayList<>();
+    private List<Integer> repeatEnds = new ArrayList<>();
+    private List<Integer> repeatStarts = new ArrayList<>();
     private int end1, end2;
     
-	public AbcMusicSection(List<AbcMusic> notes, List<Int> ends, List<Int> starts, int end1 = -1, int end2 = -1){
+	public AbcMusicSection(List<AbcMusic> notes, List<Integer> ends, List<Integer> starts, int end1, int end2){
         this.notes = notes;
         this.repeatEnds = ends;
         this.repeatStarts = starts;
