@@ -17,6 +17,7 @@ public class AbcMusicSection implements AbcMusic{
         this.end2 = end2;
 	}
     
+    @Override
     public int getLength(){
         return 0;
     }

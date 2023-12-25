@@ -3,12 +3,13 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class AbcMusicChord implements AbcMusic{
-    private List<AbcMusicNote> notes = new ArrayList<>();
+    private List<AbcMusic> notes = new ArrayList<>();
     
-	public AbcMusicChord(List<AbcMusicNote> notes){
+	public AbcMusicChord(List<AbcMusic> notes){
         this.notes = notes;
 	}
     
+    @Override
     public int getLength(){
         return notes.get(0).getLength();
     }

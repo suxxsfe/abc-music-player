@@ -7,6 +7,7 @@ public class AbcMusicRest implements AbcMusic{
         this.tick = tick;
     }
     
+    @Override
     public int getLength(){
         return tick;
     }
