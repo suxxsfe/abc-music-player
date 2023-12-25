@@ -187,6 +187,18 @@ public class AbcBaseListener implements AbcListener {
    *
    * <p>The default implementation does nothing.</p>
    */
+  @Override public void enterSegment(AbcParser.SegmentContext ctx) { }
+  /**
+   * {@inheritDoc}
+   *
+   * <p>The default implementation does nothing.</p>
+   */
+  @Override public void exitSegment(AbcParser.SegmentContext ctx) { }
+  /**
+   * {@inheritDoc}
+   *
+   * <p>The default implementation does nothing.</p>
+   */
   @Override public void enterRest(AbcParser.RestContext ctx) { }
   /**
    * {@inheritDoc}
@@ -242,18 +254,6 @@ public class AbcBaseListener implements AbcListener {
    * <p>The default implementation does nothing.</p>
    */
   @Override public void exitLength(AbcParser.LengthContext ctx) { }
-  /**
-   * {@inheritDoc}
-   *
-   * <p>The default implementation does nothing.</p>
-   */
-  @Override public void enterSegment(AbcParser.SegmentContext ctx) { }
-  /**
-   * {@inheritDoc}
-   *
-   * <p>The default implementation does nothing.</p>
-   */
-  @Override public void exitSegment(AbcParser.SegmentContext ctx) { }
 
   /**
    * {@inheritDoc}

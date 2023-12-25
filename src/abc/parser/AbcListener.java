@@ -151,6 +151,16 @@ public interface AbcListener extends ParseTreeListener {
    */
   void exitElement(AbcParser.ElementContext ctx);
   /**
+   * Enter a parse tree produced by {@link AbcParser#segment}.
+   * @param ctx the parse tree
+   */
+  void enterSegment(AbcParser.SegmentContext ctx);
+  /**
+   * Exit a parse tree produced by {@link AbcParser#segment}.
+   * @param ctx the parse tree
+   */
+  void exitSegment(AbcParser.SegmentContext ctx);
+  /**
    * Enter a parse tree produced by {@link AbcParser#rest}.
    * @param ctx the parse tree
    */
@@ -200,14 +210,4 @@ public interface AbcListener extends ParseTreeListener {
    * @param ctx the parse tree
    */
   void exitLength(AbcParser.LengthContext ctx);
-  /**
-   * Enter a parse tree produced by {@link AbcParser#segment}.
-   * @param ctx the parse tree
-   */
-  void enterSegment(AbcParser.SegmentContext ctx);
-  /**
-   * Exit a parse tree produced by {@link AbcParser#segment}.
-   * @param ctx the parse tree
-   */
-  void exitSegment(AbcParser.SegmentContext ctx);
 }

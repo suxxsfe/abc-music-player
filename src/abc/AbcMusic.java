@@ -98,10 +98,6 @@ class AbcBuilder implements AbcListener{
     @Override
     public void exitK(AbcParser.KContext ctx){}
     @Override
-    public void enterX(AbcParser.XContext ctx){}
-    @Override
-    public void exitX(AbcParser.XContext ctx){}
-    @Override
     public void enterVoice(AbcParser.VoiceContext ctx){}
     @Override
     public void exitVoice(AbcParser.VoiceContext ctx){}
