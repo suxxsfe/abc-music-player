@@ -21,4 +21,49 @@ public class AbcMusicSection implements AbcMusic{
     public int getLength(){
         return 0;
     }
+    
+    private int findStart(int end){
+        int start = 0;
+        
+        for(int i = 0; i < repeatStarts.size(); i++){
+            if(repeatStarts.get(i) >= end){
+                break;
+            }
+            start = repeatStarts.get(i);
+        }
+        
+        return start;
+    }
+    
+    private int repeat(List<Character> notes, List<Integer> octave, List<Integer> accidental,
+                        List<Integer> start, List<Integer> length, 
+                        int startIndex, int endIndex, int startTick){
+        for(int i = startIndex; i <= endIndex; i++){
+            if(i == end1){
+                i = Math.min(end2-1, endIndex);
+                continue;
+            }
+            startTick += this.notes.get(i).addNotes(notes, octave, accidental,
+                                                    start, length, startTick);
+        }
+        
+        return startTick;
+    }
+    
+    @Override
+    public int addNotes(List<Character> notes, List<Integer> octave, List<Integer> accidental,
+                        List<Integer> start, List<Integer> length, int startTick){
+        for(int i = 0; i < notes.size(); i++){
+            startTick += this.notes.get(i).addNotes(notes, octave, accidental,
+                                                    start, length, startTick);
+            if(repeatEnds.contains(i)){
+                int startIndex = findStart(i);
+                startTick = repeat(notes, octave, accidental, start,
+                                   length, startIndex, i, startTick);
+                i = Math.max(end2-1, i);
+            }
+        }
+        
+        return startTick;
+    }
 }

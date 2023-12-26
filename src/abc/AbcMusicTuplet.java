@@ -15,5 +15,19 @@ public class AbcMusicTuplet implements AbcMusic{
     public int getLength(){
         return notes.get(0).getLength()*notes.size()/timeOfNotesNum;
     }
+    
+    @Override
+    public int addNotes(List<Character> notes, List<Integer> octave, List<Integer> accidental,
+                        List<Integer> start, List<Integer> length, int startTick){
+        int tickPerNote = getLength()/notes.size();
+        
+        for(int i = 0; i < notes.size(); i++){
+            this.notes.get(i).addNotes(notes, octave, accidental, start, length, startTick);
+            length.set(length.size()-1, tickPerNote);
+            startTick += tickPerNote;
+        }
+        
+        return startTick;
+    }
 }
 

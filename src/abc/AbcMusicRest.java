@@ -1,5 +1,8 @@
 package abc;
 
+import java.util.List;
+import java.util.ArrayList;
+
 public class AbcMusicRest implements AbcMusic{
     private int tick;
     
@@ -10,6 +13,12 @@ public class AbcMusicRest implements AbcMusic{
     @Override
     public int getLength(){
         return tick;
+    }
+    
+    @Override
+    public int addNotes(List<Character> notes, List<Integer> octave, List<Integer> accidental,
+                        List<Integer> start, List<Integer> length, int startTick){
+        return startTick+getLength();
     }
 }
 

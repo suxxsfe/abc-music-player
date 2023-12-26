@@ -53,6 +53,9 @@ public interface AbcMusic{
     
     public int getLength();
     
+    public int addNotes(List<Character> notes, List<Integer> octave, List<Integer> accidental,
+                        List<Integer> start, List<Integer>length, int startTick);
+    
 }
 
 class AbcBuilder implements AbcListener{
@@ -88,6 +91,10 @@ class AbcBuilder implements AbcListener{
         return 0;
     }
     
+    public AbcMusic getAbcMusic(){
+        return stack.pop();
+    }
+    
     private void pushStack(AbcMusic element){
         stack.push(element);
         elementsNum++;
@@ -99,10 +106,6 @@ class AbcBuilder implements AbcListener{
         elementsNum--;
         segmentTicks -= element.getLength();
         return element;
-    }
-    
-    public AbcMusic getAbcMusic(){
-        return new AbcMusicRest(0);
     }
     
     @Override

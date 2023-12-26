@@ -15,6 +15,25 @@ public class AbcMusicMain implements AbcMusic{
     
     @Override
     public int getLength(){
+        int ticks = 0;
+        
+        for(int i = 0; i < voices.size(); i++){
+            ticks = Math.max(ticks, voices.get(i).getLength());
+        }
+        
         return 0;
+    }
+    
+    @Override
+    public int addNotes(List<Character> notes, List<Integer> octave, List<Integer> accidental,
+                        List<Integer> start, List<Integer> length, int startTick){
+        int ticks = 0;
+        
+        for(int i = 0; i < voices.size(); i++){
+            ticks = Math.max(voices.get(i).addNotes(notes, octave, accidental,
+                                                    start, length, startTick), ticks);
+        }
+        
+        return startTick+ticks;
     }
 }
