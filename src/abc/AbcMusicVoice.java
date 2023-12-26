@@ -21,7 +21,7 @@ public class AbcMusicVoice implements AbcMusic{
     public int addNotes(List<Character> notes, List<Integer> octave, List<Integer> accidental,
                         List<Integer> start, List<Integer> length, int startTick){
         for(int i = 0; i < sections.size(); i++){
-            startTick += sections.get(i).addNotes(notes, octave, accidental,
+            startTick = sections.get(i).addNotes(notes, octave, accidental,
                                                   start, length, startTick);
         }
         return startTick;

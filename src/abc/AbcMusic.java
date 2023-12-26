@@ -102,7 +102,7 @@ class AbcBuilder implements AbcListener{
     }
     
     private AbcMusic popStack(){
-        AbcMusic element = popStack();
+        AbcMusic element = stack.pop();
         elementsNum--;
         segmentTicks -= element.getLength();
         return element;
@@ -146,9 +146,9 @@ class AbcBuilder implements AbcListener{
             qSpeed = 100;
         }
   
-        tickPerNote   = lB*meterA*qB*FACTOR;
-        tickPerMinute = lB*meterB*qA*FACTOR*qSpeed;
-        tickPerBar    = lA*meterA*qB*FACTOR;
+        tickPerNote   = lA*meterA*qB*FACTOR;
+        tickPerMinute = lA*meterB*qA*FACTOR*qSpeed;
+        tickPerBar    = lB*meterA*qB*FACTOR;
 //        notePerMinute = meterB*qA/meterB/qB*qSpeed;
     }
     @Override
@@ -229,7 +229,8 @@ class AbcBuilder implements AbcListener{
     public void exitSection(AbcParser.SectionContext ctx){
         List<AbcMusic> notes = new ArrayList<>();
         
-        for(int i = 1; i < elementsNum; i++){
+        int num  = elementsNum;
+        for(int i = 0; i < num; i++){
             notes.add(popStack());
         }
         Collections.reverse(notes);
@@ -264,6 +265,7 @@ class AbcBuilder implements AbcListener{
         }
         else if(segmentTicks > tickPerBar){
             System.out.println("fuck you too long segment");
+            System.out.println(ctx.getText());
         }
     }
     @Override
@@ -300,6 +302,7 @@ class AbcBuilder implements AbcListener{
             octave,
             ctx.length() != null ? noteLength : tickPerNote
         ));
+        
     }
     @Override
     public void enterChord(AbcParser.ChordContext ctx){}

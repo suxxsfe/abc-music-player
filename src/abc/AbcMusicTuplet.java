@@ -21,7 +21,7 @@ public class AbcMusicTuplet implements AbcMusic{
                         List<Integer> start, List<Integer> length, int startTick){
         int tickPerNote = getLength()/notes.size();
         
-        for(int i = 0; i < notes.size(); i++){
+        for(int i = 0; i < this.notes.size(); i++){
             this.notes.get(i).addNotes(notes, octave, accidental, start, length, startTick);
             length.set(length.size()-1, tickPerNote);
             startTick += tickPerNote;

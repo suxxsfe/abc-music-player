@@ -43,7 +43,7 @@ public class AbcMusicSection implements AbcMusic{
                 i = Math.min(end2-1, endIndex);
                 continue;
             }
-            startTick += this.notes.get(i).addNotes(notes, octave, accidental,
+            startTick = this.notes.get(i).addNotes(notes, octave, accidental,
                                                     start, length, startTick);
         }
         
@@ -53,9 +53,9 @@ public class AbcMusicSection implements AbcMusic{
     @Override
     public int addNotes(List<Character> notes, List<Integer> octave, List<Integer> accidental,
                         List<Integer> start, List<Integer> length, int startTick){
-        for(int i = 0; i < notes.size(); i++){
-            startTick += this.notes.get(i).addNotes(notes, octave, accidental,
-                                                    start, length, startTick);
+        for(int i = 0; i < this.notes.size(); i++){
+            startTick = this.notes.get(i).addNotes(notes, octave, accidental,
+                                                   start, length, startTick);
             if(repeatEnds.contains(i)){
                 int startIndex = findStart(i);
                 startTick = repeat(notes, octave, accidental, start,
