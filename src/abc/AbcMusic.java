@@ -205,6 +205,11 @@ class AbcBuilder implements AbcListener{
         segmentTicks = 0;
     }
     
+    private String getVoiceName(AbcParser.VContext ctx){
+        return ctx != null ? ctx.getText().substring(2, ctx.getText().length()-1)
+                           : AbcMusic.MAIN_VOICE_NAME;
+    }
+    
     private void pushStack(AbcMusic element){
         segmentTicks += element.getLength();
         status.pushStack(element);
@@ -216,15 +221,8 @@ class AbcBuilder implements AbcListener{
         return res;
     }
     
-    private String getVoiceName(AbcParser.VContext ctx){
-        return ctx != null ? ctx.getText().substring(2, ctx.getText().length()-1)
-                           : AbcMusic.MAIN_VOICE_NAME;
-    }
     
-    @Override
-    public void enterRoot(AbcParser.RootContext ctx){}
-    @Override
-    public void exitRoot(AbcParser.RootContext ctx){
+    @Override public void exitRoot(AbcParser.RootContext ctx){
         List<AbcMusicVoice> voices = new ArrayList<>();
         
         if(voicesStatus.containsKey(AbcMusic.MAIN_VOICE_NAME)){
@@ -239,12 +237,125 @@ class AbcBuilder implements AbcListener{
         parseResult = new AbcMusicMain(voices, title, index, composer,
                                 tickPerNote, tickPerBar, tickPerMinute);
     }
-    @Override
-    public void enterHead(AbcParser.HeadContext ctx){
+    @Override public void enterVoice(AbcParser.VoiceContext ctx){
+        currentVoice = getVoiceName(ctx.v());
+        
+        if(!voicesStatus.containsKey(currentVoice)){
+            voicesStatus.put(currentVoice, new VoiceStatus(currentVoice));
+        }
+        status = voicesStatus.get(currentVoice);
+    }
+    @Override public void enterSegment(AbcParser.SegmentContext ctx){
+        clearSegmentInfo();
+        String bar = ctx.BAR().getText();
+        int currentNum = status.getElementsNumInSection();
+        if(isRepeatStartBar(bar)){
+            status.addStart(currentNum);
+        }
+        else if(isRepeatEndBar(bar)){
+            status.addEnd(currentNum-1);
+        }
+        if(isEnd1Bar(bar)){
+            status.setEnd1(currentNum);
+        }
+        else if(isEnd2Bar(bar)){
+            status.setEnd2(currentNum);
+        }
+    }
+    @Override public void exitSegment(AbcParser.SegmentContext ctx){
+        if(segmentTicks < tickPerBar){
+            pushStack(new AbcMusicRest(tickPerBar-segmentTicks));
+        }
+        else if(segmentTicks > tickPerBar){
+            System.out.println("fuck you too long segment");
+            System.out.println(ctx.getText());
+        }
+  
+        if(isSectionBar(ctx.BAR().getText())){
+            status.makeSection();
+            status.clearSectionInfo();
+        }
+    }
+    
+    
+    @Override public void exitRest(AbcParser.RestContext ctx){
+        pushStack(new AbcMusicRest(ctx.length() != null ? noteLength : tickPerNote));
+    }
+    @Override public void exitNote(AbcParser.NoteContext ctx){
+        char note = ctx.NOTECHAR().getText().charAt(0);
+        int octave = (note >= 'a' && note <= 'g') ? 1 : 0;
+        String noteString = ctx.NOTECHAR().getText();
+        
+        if(ctx.OCTAVE() != null){
+            octave += ctx.OCTAVE().getText().length()
+                      *(ctx.OCTAVE().getText().charAt(0) == '\'' ? 1 : -1);
+            noteString += ctx.OCTAVE().getText();
+        }
+        if(ctx.ACCIDENTAL() != null){
+            accidental.put(noteString, getAccidentalValue(ctx.ACCIDENTAL().getText()));
+        }
+        
+        pushStack(new AbcMusicNote(
+            Character.toUpperCase(note),
+            octave,
+            accidental.containsKey(noteString) ? accidental.get(noteString) : 0,
+            ctx.length() != null ? noteLength : tickPerNote
+        ));
+        
+    }
+    @Override public void exitChord(AbcParser.ChordContext ctx){
+        int notesNum = ctx.note().size();
+        List<AbcMusic> notes = new ArrayList<>();
+        
+        for(int i = 0; i < notesNum; i++){
+            notes.add(popStack());
+        }
+        
+        Collections.reverse(notes);
+        pushStack(new AbcMusicChord(notes));
+    }
+    @Override public void exitTuplet(AbcParser.TupletContext ctx){
+        int notesNum = Integer.valueOf(ctx.TUPLETSIGN().getText()
+                                        .substring(1, ctx.TUPLETSIGN().getText().length()));
+        List<AbcMusic> notes = new ArrayList<>();//tuplet may contains chords
+        
+        for(int i = 0; i < notesNum; i++){
+            notes.add(popStack());
+        }
+        Collections.reverse(notes);
+        int timeOfNotesNum = 0;
+        if(TUPLETS_LENGTH.containsKey(notesNum)){
+            timeOfNotesNum = TUPLETS_LENGTH.get(notesNum);
+        }
+        else{
+            System.out.println("fuck you tuplet type not supported");
+        }
+        
+        pushStack(new AbcMusicTuplet(notes, timeOfNotesNum));
+    }
+    @Override public void exitLength(AbcParser.LengthContext ctx){
+        int a = 1, b = 1;
+        String len = ctx.getText();
+        int div = len.indexOf("/");
+        if(div != -1){
+            if(div != len.length()){
+                b = Integer.valueOf(len.substring(div+1, len.length()));
+            }
+            if(div != 0){
+                a = Integer.valueOf(len.substring(0, div));
+            }
+        }
+        else{
+            a = Integer.valueOf(len);
+        }
+        noteLength = a*tickPerNote/b;
+    }
+    
+    
+    @Override public void enterHead(AbcParser.HeadContext ctx){
         composer = "Unknown";
     }
-    @Override
-    public void exitHead(AbcParser.HeadContext ctx){
+    @Override public void exitHead(AbcParser.HeadContext ctx){
         if(meterA == 0){
             meterA = meterB = 4;
         }
@@ -267,205 +378,55 @@ class AbcBuilder implements AbcListener{
         tickPerNote   = meterB*lA*qB*FACTOR;
         tickPerMinute = meterB*lB*qA*FACTOR*qSpeed;
         tickPerBar    = meterA*lB*qB*FACTOR;
-//        notePerMinute = meterB*qA/meterB/qB*qSpeed;
     }
-    @Override
-    public void enterX(AbcParser.XContext ctx){
+    @Override public void enterX(AbcParser.XContext ctx){
         index = ctx.NUMBER().getText();
     }
-    @Override
-    public void exitX(AbcParser.XContext ctx){}
-    @Override
-    public void enterT(AbcParser.TContext ctx){
+    @Override public void enterT(AbcParser.TContext ctx){
         title = ctx.getText().substring(2, ctx.getText().length());
     }
-    @Override
-    public void exitT(AbcParser.TContext ctx){}
-    @Override
-    public void enterC(AbcParser.CContext ctx){
+    @Override public void enterC(AbcParser.CContext ctx){
         composer = ctx.getText().substring(2, ctx.getText().length());
     }
-    @Override
-    public void exitC(AbcParser.CContext ctx){}
-    @Override
-    public void enterL(AbcParser.LContext ctx){
+    @Override public void enterL(AbcParser.LContext ctx){
         lA = Integer.valueOf(ctx.NUMBER().get(0).getText());
         lB = Integer.valueOf(ctx.NUMBER().get(1).getText());
     }
-    @Override
-    public void exitL(AbcParser.LContext ctx){}
-    @Override
-    public void enterM(AbcParser.MContext ctx){
+    @Override public void enterM(AbcParser.MContext ctx){
         meterA = Integer.valueOf(ctx.NUMBER().get(0).getText());
         meterB = Integer.valueOf(ctx.NUMBER().get(1).getText());
     }
-    @Override
-    public void exitM(AbcParser.MContext ctx){}
-    @Override
-    public void enterQ(AbcParser.QContext ctx){
+    @Override public void enterQ(AbcParser.QContext ctx){
         qA = Integer.valueOf(ctx.NUMBER().get(0).getText());
         qB = Integer.valueOf(ctx.NUMBER().get(1).getText());
         qSpeed = Integer.valueOf(ctx.NUMBER().get(2).getText());
     }
-    @Override
-    public void exitQ(AbcParser.QContext ctx){}
-    @Override
-    public void enterV(AbcParser.VContext ctx){}
-    @Override
-    public void exitV(AbcParser.VContext ctx){}
-    @Override
-    public void enterK(AbcParser.KContext ctx){}
-    @Override
-    public void exitK(AbcParser.KContext ctx){}
     
-    @Override
-    public void enterBody(AbcParser.BodyContext ctx){}
-    @Override
-    public void exitBody(AbcParser.BodyContext ctx){}
-    @Override
-    public void enterVoice(AbcParser.VoiceContext ctx){
-        currentVoice = getVoiceName(ctx.v());
-        
-        if(!voicesStatus.containsKey(currentVoice)){
-            voicesStatus.put(currentVoice, new VoiceStatus(currentVoice));
-        }
-        status = voicesStatus.get(currentVoice);
-    }
-    @Override
-    public void exitVoice(AbcParser.VoiceContext ctx){}
-    @Override
-    public void enterSegment(AbcParser.SegmentContext ctx){
-        clearSegmentInfo();
-        String bar = ctx.BAR().getText();
-        int currentNum = status.getElementsNumInSection();
-        if(isRepeatStartBar(bar)){
-            status.addStart(currentNum);
-        }
-        else if(isRepeatEndBar(bar)){
-            status.addEnd(currentNum-1);
-        }
-        if(isEnd1Bar(bar)){
-            status.setEnd1(currentNum);
-        }
-        else if(isEnd2Bar(bar)){
-            status.setEnd2(currentNum);
-        }
-    }
-    @Override
-    public void exitSegment(AbcParser.SegmentContext ctx){
-        if(segmentTicks < tickPerBar){
-            pushStack(new AbcMusicRest(tickPerBar-segmentTicks));
-        }
-        else if(segmentTicks > tickPerBar){
-            System.out.println("fuck you too long segment");
-            System.out.println(ctx.getText());
-        }
-  
-        if(isSectionBar(ctx.BAR().getText())){
-            status.makeSection();
-            status.clearSectionInfo();
-        }
-    }
-    @Override
-    public void enterElement(AbcParser.ElementContext ctx){}
-    @Override
-    public void exitElement(AbcParser.ElementContext ctx){}
+    @Override public void enterRoot(AbcParser.RootContext ctx){}
+    @Override public void exitQ(AbcParser.QContext ctx){}
+    @Override public void enterV(AbcParser.VContext ctx){}
+    @Override public void exitV(AbcParser.VContext ctx){}
+    @Override public void enterK(AbcParser.KContext ctx){}
+    @Override public void exitK(AbcParser.KContext ctx){}
+    @Override public void enterLength(AbcParser.LengthContext ctx){}
+    @Override public void enterTuplet(AbcParser.TupletContext ctx){}
+    @Override public void enterChord(AbcParser.ChordContext ctx){}
+    @Override public void enterElement(AbcParser.ElementContext ctx){}
+    @Override public void exitElement(AbcParser.ElementContext ctx){}
+    @Override public void enterRest(AbcParser.RestContext ctx){}
+    @Override public void enterNote(AbcParser.NoteContext ctx){}
+    @Override public void exitVoice(AbcParser.VoiceContext ctx){}
+    @Override public void exitX(AbcParser.XContext ctx){}
+    @Override public void exitT(AbcParser.TContext ctx){}
+    @Override public void exitC(AbcParser.CContext ctx){}
+    @Override public void exitL(AbcParser.LContext ctx){}
+    @Override public void exitM(AbcParser.MContext ctx){}
     
-    @Override
-    public void enterRest(AbcParser.RestContext ctx){}
-    @Override
-    public void exitRest(AbcParser.RestContext ctx){
-        pushStack(new AbcMusicRest(ctx.length() != null ? noteLength : tickPerNote));
-    }
-    @Override
-    public void enterNote(AbcParser.NoteContext ctx){}
-    @Override
-    public void exitNote(AbcParser.NoteContext ctx){
-        char note = ctx.NOTECHAR().getText().charAt(0);
-        int octave = (note >= 'a' && note <= 'g') ? 1 : 0;
-        String noteString = ctx.NOTECHAR().getText();
-        
-        if(ctx.OCTAVE() != null){
-            octave += ctx.OCTAVE().getText().length()
-                      *(ctx.OCTAVE().getText().charAt(0) == '\'' ? 1 : -1);
-            noteString += ctx.OCTAVE().getText();
-        }
-        if(ctx.ACCIDENTAL() != null){
-            accidental.put(noteString, getAccidentalValue(ctx.ACCIDENTAL().getText()));
-        }
-        
-        pushStack(new AbcMusicNote(
-            Character.toUpperCase(note),
-            octave,
-            accidental.containsKey(noteString) ? accidental.get(noteString) : 0,
-            ctx.length() != null ? noteLength : tickPerNote
-        ));
-        
-    }
-    @Override
-    public void enterChord(AbcParser.ChordContext ctx){}
-    @Override
-    public void exitChord(AbcParser.ChordContext ctx){
-        int notesNum = ctx.note().size();
-        List<AbcMusic> notes = new ArrayList<>();
-        
-        for(int i = 0; i < notesNum; i++){
-            notes.add(popStack());
-        }
-        
-        Collections.reverse(notes);
-        pushStack(new AbcMusicChord(notes));
-    }
-    @Override
-    public void enterTuplet(AbcParser.TupletContext ctx){}
-    @Override
-    public void exitTuplet(AbcParser.TupletContext ctx){
-        int notesNum = Integer.valueOf(ctx.TUPLETSIGN().getText()
-                                        .substring(1, ctx.TUPLETSIGN().getText().length()));
-        List<AbcMusic> notes = new ArrayList<>();//tuplet may contains chords
-        
-        for(int i = 0; i < notesNum; i++){
-            notes.add(popStack());
-        }
-        Collections.reverse(notes);
-        int timeOfNotesNum = 0;
-        if(TUPLETS_LENGTH.containsKey(notesNum)){
-            timeOfNotesNum = TUPLETS_LENGTH.get(notesNum);
-        }
-        else{
-            System.out.println("fuck you tuplet type not supported");
-        }
-        
-        pushStack(new AbcMusicTuplet(notes, timeOfNotesNum));
-    }
-    @Override
-    public void enterLength(AbcParser.LengthContext ctx){}
-    @Override
-    public void exitLength(AbcParser.LengthContext ctx){
-        int a = 1, b = 1;
-        String len = ctx.getText();
-        int div = len.indexOf("/");
-        if(div != -1){
-            if(div != len.length()){
-                b = Integer.valueOf(len.substring(div+1, len.length()));
-            }
-            if(div != 0){
-                a = Integer.valueOf(len.substring(0, div));
-            }
-        }
-        else{
-            a = Integer.valueOf(len);
-        }
-        noteLength = a*tickPerNote/b;
-    }
-    
-    @Override
-    public void visitTerminal(TerminalNode terminal){}
-    @Override
-    public void visitErrorNode(ErrorNode node){}
-    @Override
-    public void enterEveryRule(ParserRuleContext ctx){}
-    @Override
-    public void exitEveryRule(ParserRuleContext ctx){}
+    @Override public void enterBody(AbcParser.BodyContext ctx){}
+    @Override public void exitBody(AbcParser.BodyContext ctx){}
+    @Override public void visitTerminal(TerminalNode terminal){}
+    @Override public void visitErrorNode(ErrorNode node){}
+    @Override public void enterEveryRule(ParserRuleContext ctx){}
+    @Override public void exitEveryRule(ParserRuleContext ctx){}
 }
 
