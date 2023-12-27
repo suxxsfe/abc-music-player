@@ -74,7 +74,7 @@ public class SequencePlayerTest {
             
             System.out.println(player);
             
-            player.play();
+            //player.play();
         }
         catch(MidiUnavailableException | InvalidMidiDataException e){
             e.printStackTrace();
@@ -160,7 +160,7 @@ public class SequencePlayerTest {
             
             System.out.println(player);
             
-            player.play();
+//            player.play();
         }
         catch(MidiUnavailableException | InvalidMidiDataException e){
             e.printStackTrace();

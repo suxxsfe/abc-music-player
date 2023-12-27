@@ -6,9 +6,9 @@ import java.util.ArrayList;
 public class AbcMusicMain implements AbcMusic{
     private final String title, index, composer;
     private final int tickPerNote, tickPerBar, tickPerMinute;
-    private List<AbcMusic> voices;
+    private List<AbcMusicVoice> voices;
     
-	public AbcMusicMain(List<AbcMusic> voices, String title, String index, String composer,
+	public AbcMusicMain(List<AbcMusicVoice> voices, String title, String index, String composer,
                         int tickPerNote, int tickPerBar, int tickPerMinute){
         this.voices = voices;
         this.title = title;
@@ -22,12 +22,12 @@ public class AbcMusicMain implements AbcMusic{
     
     @Override
     public int getLength(){
-        int ticks = 0;
-        
-        for(int i = 0; i < voices.size(); i++){
-            ticks = Math.max(ticks, voices.get(i).getLength());
-        }
-        
+//        int ticks = 0;
+//        
+//        for(int i = 0; i < voices.size(); i++){
+//            ticks = Math.max(ticks, voices.get(i).getLength());
+//        }
+//        
         return 0;
     }
     
@@ -36,9 +36,14 @@ public class AbcMusicMain implements AbcMusic{
                         List<Integer> start, List<Integer> length, int startTick){
         int ticks = 0;
         
-        for(int i = 0; i < voices.size(); i++){
-            ticks = Math.max(voices.get(i).addNotes(notes, octave, accidental,
-                                                    start, length, startTick), ticks);
+        for(AbcMusicVoice i: voices){
+            if(i.getName() != MAIN_VOICE_NAME){
+                ticks = Math.max(i.addNotes(notes, octave, accidental,
+                                            start, length, startTick), startTick);
+            }
+            else{
+                startTick = i.addNotes(notes, octave, accidental, start, length, startTick);
+            }
         }
         
         return startTick+ticks;
@@ -49,7 +54,6 @@ public class AbcMusicMain implements AbcMusic{
     }
     
     public int getBeatsPerMinute(){
-        System.out.printf("%d %d\n",tickPerMinute, tickPerNote);
         return tickPerMinute/tickPerNote;
     }
     

@@ -24,9 +24,21 @@ public class Main{
             		+"Q:1/4=140\n"
             		+"K:C\n"
             		+"C C C C | E3/4 D/4 E3/4 F/4 G2 |]\n";
+        String abcVoice = "X:2\n"
+                         +"T:Piece No.2\n"
+                         +"M:4/4\n"
+                         +"L:1/4\n"
+                         +"Q:1/4=200\n"
+                         +"K:C\n"
+                         +"[^F/2e/2] [=F/2e/2] z/2 [F/2e/2] z/2 [F/2c/2] [Fe] | [GBg] z G z | c3/2 G/2 z E | E/2 A B _B/2 A | (3Geg a f/2 g/2 | z/2 e c/2 d/2 B3/2 |]\n"
+                         +"V:normal\n"
+                         +"[^F/2e/2] [=F/2e/2] z/2 [F/2e/2] z/2 [F/2c/2] [Fe] | [GBg] z G z | c3/2 G/2 z E | E/2 A B _B/2 A | (3Geg a f/2 g/2 | z/2 e c/2 d/2 B3/2 |]\n"
+                         +"V:upper\n"
+                         +"G''4 | G''4 | G''4 | G''4 | G''4 |]\n";
+
         String abc2 = "C C C3/4 D/4 E | E3/4 D/4 E3/4 F/4 G2 |]";
         
-        AbcMusicMain sample = AbcMusic.parse(mario);
+        AbcMusicMain sample = AbcMusic.parse(abcVoice);
         
         List<Character> notes = new ArrayList<>();
         List<Integer> octave = new ArrayList<>();

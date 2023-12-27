@@ -26,4 +26,16 @@ public class AbcMusicVoice implements AbcMusic{
         }
         return startTick;
     }
+    
+    public AbcMusicVoice merge(AbcMusicVoice that){
+        List<AbcMusic> newSections = new ArrayList<>(sections);
+        
+        newSections.addAll(that.sections);
+        
+        return new AbcMusicVoice(newSections, name);
+    }
+    
+    public String getName(){
+        return name;
+    }
 }

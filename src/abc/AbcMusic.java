@@ -26,6 +26,8 @@ import abc.parser.AbcListener;
 
 public interface AbcMusic{
     
+    public static final String MAIN_VOICE_NAME = "";
+    
     public static AbcMusicMain parse(String input){
         System.out.println("start parsing");
         
@@ -80,6 +82,7 @@ class AbcBuilder implements AbcListener{
     private List<Integer> repeatStarts = new ArrayList<>();
     
     private Stack<AbcMusic> stack = new Stack<>();
+    private Map<String, AbcMusicVoice> voice = new HashMap<>();
     private AbcMusicMain parseResult;
     
     private static int getAccidentalValue(String acci){
@@ -113,12 +116,16 @@ class AbcBuilder implements AbcListener{
     public void enterRoot(AbcParser.RootContext ctx){}
     @Override
     public void exitRoot(AbcParser.RootContext ctx){
-        List<AbcMusic> voices = new ArrayList<>();
+        List<AbcMusicVoice> voices = new ArrayList<>();
         
-        while(!stack.empty()){
-            voices.add(popStack());
+        if(voice.containsKey(AbcMusic.MAIN_VOICE_NAME)){
+            voices.add(voice.get(AbcMusic.MAIN_VOICE_NAME));
         }
-        Collections.reverse(voices);
+        for(AbcMusicVoice vv: voice.values()){
+            if(vv.getName() != AbcMusic.MAIN_VOICE_NAME){
+                voices.add(vv);
+            }
+        }
         
         parseResult = new AbcMusicMain(voices, title, index, composer,
                                 tickPerNote, tickPerBar, tickPerMinute);
@@ -213,12 +220,22 @@ class AbcBuilder implements AbcListener{
         int sectionsNum = ctx.section().size();
         List<AbcMusic> sections = new ArrayList<>();
         
-        for(int i = 1; i< sectionsNum; i++){
+        for(int i = 0; i < sectionsNum; i++){
             sections.add(popStack());
         }
         Collections.reverse(sections);
         
-        pushStack(new AbcMusicVoice(sections, "voice name"));
+        String voiceName = AbcMusic.MAIN_VOICE_NAME;
+        if(ctx.v() != null){
+            voiceName = ctx.v().getText().substring(2, ctx.v().getText().length());
+        }
+        if(voice.containsKey(voiceName)){
+            AbcMusicVoice vv = voice.get(voiceName);
+            voice.put(voiceName, vv.merge(new AbcMusicVoice(sections, voiceName)));
+        }
+        else{
+            voice.put(voiceName, new AbcMusicVoice(sections, voiceName));
+        }
     }
     @Override
     public void enterSection(AbcParser.SectionContext ctx){

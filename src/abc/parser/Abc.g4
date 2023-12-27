@@ -18,7 +18,7 @@ c: 'C:' (LETTER | NUMBER | CHAR | SPACES | NOTECHAR)+ NEWLINE;
 l: 'L:' NUMBER DIV NUMBER NEWLINE;
 m: 'M:' NUMBER DIV NUMBER NEWLINE;
 q: 'Q:' NUMBER DIV NUMBER ACCIDENTAL NUMBER NEWLINE;
-v: 'V:' NEWLINE;
+v: 'V:' (LETTER | NUMBER | CHAR | SPACES | NOTECHAR)+ NEWLINE;
 k: 'K:C' NEWLINE;
 
 REST: 'z';
@@ -30,8 +30,8 @@ DIGIT: [0-9];
 LETTER: [a-zA-Z];
 CHAR: [\.\-];
 
-body: voice (NEWLINE voice)* NEWLINE?;
-voice: (section SECTIONBAR)+;
+body: voice (voice)* NEWLINE?;
+voice: v? (section SECTIONBAR)+;
 section: segment+;
 element: SPACES? (rest | note | chord | tuplet) SPACES;
 segment : BAR? element+;
@@ -42,8 +42,8 @@ chord: '[' note+ ']';
 tuplet: TUPLETSIGN note+;
 length: NUMBER | (NUMBER? DIV NUMBER?);
 
-SECTIONBAR: '||' | '[|' | '|]';
-BAR: ('|' | ':|' | '|:') ('[1' | '[2')?;
+SECTIONBAR: ('||' | '[|' | '|]') NEWLINE?;
+BAR: ('|' | ':|' | '|:') ('[1' | '[2')? NEWLINE?;
 OCTAVE: ','+ | '\''+;
 
 SPACES: [ ]+;
