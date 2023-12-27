@@ -26,7 +26,7 @@ import abc.parser.AbcListener;
 
 public interface AbcMusic{
     
-    public static AbcMusic parse(String input){
+    public static AbcMusicMain parse(String input){
         System.out.println("start parsing");
         
         AbcParser parser = makeParser(input);
@@ -80,6 +80,7 @@ class AbcBuilder implements AbcListener{
     private List<Integer> repeatStarts = new ArrayList<>();
     
     private Stack<AbcMusic> stack = new Stack<>();
+    private AbcMusicMain parseResult;
     
     private static int getAccidentalValue(String acci){
         if(acci.charAt(0) == '^'){
@@ -91,8 +92,8 @@ class AbcBuilder implements AbcListener{
         return 0;
     }
     
-    public AbcMusic getAbcMusic(){
-        return stack.pop();
+    public AbcMusicMain getAbcMusic(){
+        return parseResult;
     }
     
     private void pushStack(AbcMusic element){
@@ -119,7 +120,8 @@ class AbcBuilder implements AbcListener{
         }
         Collections.reverse(voices);
         
-        pushStack(new AbcMusicMain(voices, title, index));
+        parseResult = new AbcMusicMain(voices, title, index, composer,
+                                tickPerNote, tickPerBar, tickPerMinute);
     }
     @Override
     public void enterHead(AbcParser.HeadContext ctx){
@@ -146,9 +148,9 @@ class AbcBuilder implements AbcListener{
             qSpeed = 100;
         }
   
-        tickPerNote   = lA*meterA*qB*FACTOR;
-        tickPerMinute = lA*meterB*qA*FACTOR*qSpeed;
-        tickPerBar    = lB*meterA*qB*FACTOR;
+        tickPerNote   = meterB*lA*qB*FACTOR;
+        tickPerMinute = meterB*lB*qA*FACTOR*qSpeed;
+        tickPerBar    = meterA*lB*qB*FACTOR;
 //        notePerMinute = meterB*qA/meterB/qB*qSpeed;
     }
     @Override
@@ -298,8 +300,8 @@ class AbcBuilder implements AbcListener{
         
         pushStack(new AbcMusicNote(
             Character.toUpperCase(note),
-            accidental.containsKey(noteString) ? accidental.get(noteString) : 0,
             octave,
+            accidental.containsKey(noteString) ? accidental.get(noteString) : 0,
             ctx.length() != null ? noteLength : tickPerNote
         ));
         
@@ -322,7 +324,8 @@ class AbcBuilder implements AbcListener{
     public void enterTuplet(AbcParser.TupletContext ctx){}
     @Override
     public void exitTuplet(AbcParser.TupletContext ctx){
-        int notesNum = Integer.valueOf(ctx.TUPLETLENGTH().getText());
+        int notesNum = Integer.valueOf(ctx.TUPLETSIGN().getText()
+                                        .substring(1, ctx.TUPLETSIGN().getText().length()));
         List<AbcMusic> notes = new ArrayList<>();//tuplet may contains chords
         
         for(int i = 0; i < notesNum; i++){
