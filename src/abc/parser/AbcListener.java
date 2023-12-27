@@ -131,16 +131,6 @@ public interface AbcListener extends ParseTreeListener {
    */
   void exitVoice(AbcParser.VoiceContext ctx);
   /**
-   * Enter a parse tree produced by {@link AbcParser#section}.
-   * @param ctx the parse tree
-   */
-  void enterSection(AbcParser.SectionContext ctx);
-  /**
-   * Exit a parse tree produced by {@link AbcParser#section}.
-   * @param ctx the parse tree
-   */
-  void exitSection(AbcParser.SectionContext ctx);
-  /**
    * Enter a parse tree produced by {@link AbcParser#element}.
    * @param ctx the parse tree
    */

@@ -20,5 +20,10 @@ public class AbcMusicRest implements AbcMusic{
                         List<Integer> start, List<Integer> length, int startTick){
         return startTick+getLength();
     }
+    
+    @Override
+    public String toString(){
+        return "rest length("+tick+")";
+    }
 }
 

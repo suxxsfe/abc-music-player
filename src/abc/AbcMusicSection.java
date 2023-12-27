@@ -66,4 +66,16 @@ public class AbcMusicSection implements AbcMusic{
         
         return startTick;
     }
+    
+    @Override
+    public String toString(){
+        String res = "";
+        
+        for(AbcMusic note: notes){
+            res += note.toString()+" ";
+        }
+        res += "\n";
+        
+        return res;
+    }
 }

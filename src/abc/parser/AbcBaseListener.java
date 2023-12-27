@@ -163,18 +163,6 @@ public class AbcBaseListener implements AbcListener {
    *
    * <p>The default implementation does nothing.</p>
    */
-  @Override public void enterSection(AbcParser.SectionContext ctx) { }
-  /**
-   * {@inheritDoc}
-   *
-   * <p>The default implementation does nothing.</p>
-   */
-  @Override public void exitSection(AbcParser.SectionContext ctx) { }
-  /**
-   * {@inheritDoc}
-   *
-   * <p>The default implementation does nothing.</p>
-   */
   @Override public void enterElement(AbcParser.ElementContext ctx) { }
   /**
    * {@inheritDoc}

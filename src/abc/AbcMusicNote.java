@@ -30,5 +30,10 @@ public class AbcMusicNote implements AbcMusic{
         
         return startTick+getLength();
     }
+    
+    @Override
+    public String toString(){
+        return ""+note+" trans("+octave+","+accidental+") length("+tick+")";
+    }
 }
 

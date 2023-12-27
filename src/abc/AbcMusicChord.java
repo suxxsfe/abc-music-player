@@ -23,5 +23,16 @@ public class AbcMusicChord implements AbcMusic{
         
         return startTick+getLength();
     }
+    
+    @Override
+    public String toString(){
+        String res = "chord("+notes.size()+"): [ ";
+        
+        for(AbcMusic note: notes){
+            res += note.toString()+" ";
+        }
+        
+        return res+" ]";
+    }
 }
 

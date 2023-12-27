@@ -58,6 +58,89 @@ public interface AbcMusic{
     public int addNotes(List<Character> notes, List<Integer> octave, List<Integer> accidental,
                         List<Integer> start, List<Integer>length, int startTick);
     
+    public String toString();
+    
+}
+
+class VoiceStatus{
+    private final String name;
+    
+    private int elementsNum;
+    private int end1, end2;
+    private List<Integer> repeatEnds = new ArrayList<>();
+    private List<Integer> repeatStarts = new ArrayList<>();
+    private Stack<AbcMusic> stack = new Stack<>();
+    
+    public VoiceStatus(String name){
+        this.name = name;
+    }
+    
+    public String getName(){
+        return name;
+    }
+    
+    public void pushStack(AbcMusic element){
+        stack.push(element);
+        elementsNum++;
+    }
+    
+    public AbcMusic popStack(){
+        AbcMusic element = stack.pop();
+        elementsNum--;
+        return element;
+    }
+    
+    public int getElementsNumInSection(){
+        return elementsNum;
+    }
+    
+    public void clearSectionInfo(){
+        elementsNum = 0;
+        end1 = end2 = -1;
+        repeatStarts.clear();
+        repeatEnds.clear();
+    }
+    
+    public void setEnd1(int end1){
+        this.end1 = end1;
+    }
+    
+    public void setEnd2(int end2){
+        this.end2 = end2;
+    }
+    
+    public void addStart(int start){
+        repeatStarts.add(start);
+    }
+    
+    public void addEnd(int end){
+        repeatEnds.add(end);
+    }
+    
+    public AbcMusicVoice getMusic(){
+        List<AbcMusic> sections = new ArrayList<>();
+        
+        while(!stack.empty()){
+            sections.add(stack.pop());
+        }
+        Collections.reverse(sections);
+        
+        return new AbcMusicVoice(sections, name);
+    }
+    
+    public void makeSection(){
+        List<AbcMusic> notes = new ArrayList<>();
+        
+        int num  = elementsNum;
+        for(int i = 0; i < num; i++){
+            notes.add(popStack());
+        }
+        Collections.reverse(notes);
+        
+        pushStack(new AbcMusicSection(notes, new ArrayList<>(repeatEnds),
+                                       new ArrayList<>(repeatStarts), end1, end2));
+        
+    }
 }
 
 class AbcBuilder implements AbcListener{
@@ -74,15 +157,13 @@ class AbcBuilder implements AbcListener{
     private int meterA, meterB, lA, lB, qA, qB, qSpeed;// rational: A/B
     
     private int noteLength;
+    private int segmentTicks;
     private Map<String, Integer> accidental = new HashMap<>();
     
-    private int elementsNum, segmentTicks;
-    private int end1, end2;
-    private List<Integer> repeatEnds = new ArrayList<>();
-    private List<Integer> repeatStarts = new ArrayList<>();
+    private Map<String, VoiceStatus> voicesStatus = new HashMap<>();
+    private VoiceStatus status = null;
+    private String currentVoice;
     
-    private Stack<AbcMusic> stack = new Stack<>();
-    private Map<String, AbcMusicVoice> voice = new HashMap<>();
     private AbcMusicMain parseResult;
     
     private static int getAccidentalValue(String acci){
@@ -95,21 +176,49 @@ class AbcBuilder implements AbcListener{
         return 0;
     }
     
+    private boolean isSectionBar(String bar){
+        return bar.indexOf("||") != -1 || bar.indexOf("|[") != -1 || bar.indexOf("|]") != -1;
+    }
+    
+    private boolean isEnd1Bar(String bar){
+        return bar.indexOf("[1") != -1;
+    }
+    
+    private boolean isEnd2Bar(String bar){
+        return bar.indexOf("[2") != -1;
+    }
+    
+    private boolean isRepeatStartBar(String bar){
+        return bar.indexOf("|:") != -1;
+    }
+    
+    private boolean isRepeatEndBar(String bar){
+        return bar.indexOf(":|") != -1;
+    }
+    
     public AbcMusicMain getAbcMusic(){
         return parseResult;
     }
     
+    private void clearSegmentInfo(){
+        accidental.clear();
+        segmentTicks = 0;
+    }
+    
     private void pushStack(AbcMusic element){
-        stack.push(element);
-        elementsNum++;
         segmentTicks += element.getLength();
+        status.pushStack(element);
     }
     
     private AbcMusic popStack(){
-        AbcMusic element = stack.pop();
-        elementsNum--;
-        segmentTicks -= element.getLength();
-        return element;
+        AbcMusic res = status.popStack();
+        segmentTicks -= res.getLength();
+        return res;
+    }
+    
+    private String getVoiceName(AbcParser.VContext ctx){
+        return ctx != null ? ctx.getText().substring(2, ctx.getText().length()-1)
+                           : AbcMusic.MAIN_VOICE_NAME;
     }
     
     @Override
@@ -118,12 +227,12 @@ class AbcBuilder implements AbcListener{
     public void exitRoot(AbcParser.RootContext ctx){
         List<AbcMusicVoice> voices = new ArrayList<>();
         
-        if(voice.containsKey(AbcMusic.MAIN_VOICE_NAME)){
-            voices.add(voice.get(AbcMusic.MAIN_VOICE_NAME));
+        if(voicesStatus.containsKey(AbcMusic.MAIN_VOICE_NAME)){
+            voices.add(voicesStatus.get(AbcMusic.MAIN_VOICE_NAME).getMusic());
         }
-        for(AbcMusicVoice vv: voice.values()){
+        for(VoiceStatus vv: voicesStatus.values()){
             if(vv.getName() != AbcMusic.MAIN_VOICE_NAME){
-                voices.add(vv);
+                voices.add(vv.getMusic());
             }
         }
         
@@ -214,67 +323,32 @@ class AbcBuilder implements AbcListener{
     @Override
     public void exitBody(AbcParser.BodyContext ctx){}
     @Override
-    public void enterVoice(AbcParser.VoiceContext ctx){}
-    @Override
-    public void exitVoice(AbcParser.VoiceContext ctx){
-        int sectionsNum = ctx.section().size();
-        List<AbcMusic> sections = new ArrayList<>();
+    public void enterVoice(AbcParser.VoiceContext ctx){
+        currentVoice = getVoiceName(ctx.v());
         
-        for(int i = 0; i < sectionsNum; i++){
-            sections.add(popStack());
+        if(!voicesStatus.containsKey(currentVoice)){
+            voicesStatus.put(currentVoice, new VoiceStatus(currentVoice));
         }
-        Collections.reverse(sections);
-        
-        String voiceName = AbcMusic.MAIN_VOICE_NAME;
-        if(ctx.v() != null){
-            voiceName = ctx.v().getText().substring(2, ctx.v().getText().length());
-        }
-        if(voice.containsKey(voiceName)){
-            AbcMusicVoice vv = voice.get(voiceName);
-            voice.put(voiceName, vv.merge(new AbcMusicVoice(sections, voiceName)));
-        }
-        else{
-            voice.put(voiceName, new AbcMusicVoice(sections, voiceName));
-        }
+        status = voicesStatus.get(currentVoice);
     }
     @Override
-    public void enterSection(AbcParser.SectionContext ctx){
-        elementsNum = 0;
-        end1 = end2 = -1;
-        repeatEnds.clear();
-        repeatStarts.clear();
-    }
-    @Override
-    public void exitSection(AbcParser.SectionContext ctx){
-        List<AbcMusic> notes = new ArrayList<>();
-        
-        int num  = elementsNum;
-        for(int i = 0; i < num; i++){
-            notes.add(popStack());
-        }
-        Collections.reverse(notes);
-        
-        pushStack(new AbcMusicSection(notes, new ArrayList<>(repeatEnds),
-                                       new ArrayList<>(repeatStarts), end1, end2));
-    }
+    public void exitVoice(AbcParser.VoiceContext ctx){}
     @Override
     public void enterSegment(AbcParser.SegmentContext ctx){
-        accidental.clear();
-        segmentTicks = 0;
-        if(ctx.BAR() != null){
-            String bar = ctx.BAR().getText();
-            if(bar.indexOf("|:") != -1){
-                repeatStarts.add(elementsNum);
-            }
-            else if(bar.indexOf(":|") != -1){
-                repeatEnds.add(elementsNum-1);
-            }
-            if(bar.indexOf("[1") != -1){
-                end1 = elementsNum;
-            }
-            else if(bar.indexOf("[2") != -1){
-                end2 = elementsNum;
-            }
+        clearSegmentInfo();
+        String bar = ctx.BAR().getText();
+        int currentNum = status.getElementsNumInSection();
+        if(isRepeatStartBar(bar)){
+            status.addStart(currentNum);
+        }
+        else if(isRepeatEndBar(bar)){
+            status.addEnd(currentNum-1);
+        }
+        if(isEnd1Bar(bar)){
+            status.setEnd1(currentNum);
+        }
+        else if(isEnd2Bar(bar)){
+            status.setEnd2(currentNum);
         }
     }
     @Override
@@ -285,6 +359,11 @@ class AbcBuilder implements AbcListener{
         else if(segmentTicks > tickPerBar){
             System.out.println("fuck you too long segment");
             System.out.println(ctx.getText());
+        }
+  
+        if(isSectionBar(ctx.BAR().getText())){
+            status.makeSection();
+            status.clearSectionInfo();
         }
     }
     @Override

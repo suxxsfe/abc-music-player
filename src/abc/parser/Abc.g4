@@ -31,10 +31,9 @@ LETTER: [a-zA-Z];
 CHAR: [\.\-];
 
 body: voice (voice)* NEWLINE?;
-voice: v? (section SECTIONBAR)+;
-section: segment+;
+voice: v? segment+;
 element: SPACES? (rest | note | chord | tuplet) SPACES;
-segment : BAR? element+;
+segment : element+ BAR;
 
 rest: REST length?;
 note: (ACCIDENTAL)? NOTECHAR (OCTAVE)? length?;
@@ -42,8 +41,7 @@ chord: '[' note+ ']';
 tuplet: TUPLETSIGN note+;
 length: NUMBER | (NUMBER? DIV NUMBER?);
 
-SECTIONBAR: ('||' | '[|' | '|]') NEWLINE?;
-BAR: ('|' | ':|' | '|:') ('[1' | '[2')? NEWLINE?;
+BAR: ((('|' | ':|' | '|:') ('[1' | '[2')?) | ('||' | '[|' | '|]')) NEWLINE?;
 OCTAVE: ','+ | '\''+;
 
 SPACES: [ ]+;

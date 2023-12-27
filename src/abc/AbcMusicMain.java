@@ -49,6 +49,11 @@ public class AbcMusicMain implements AbcMusic{
         return startTick+ticks;
     }
     
+    @Override
+    public String toString(){
+        return "";
+    }
+    
     public int getTicksPerBeat(){
         return tickPerNote;
     }

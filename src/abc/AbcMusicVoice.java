@@ -27,6 +27,17 @@ public class AbcMusicVoice implements AbcMusic{
         return startTick;
     }
     
+    @Override
+    public String toString(){
+        String res = "voice "+name+":\n";
+        
+        for(AbcMusic section: sections){
+            res += sections;
+        }
+        
+        return res;
+    }
+    
     public AbcMusicVoice merge(AbcMusicVoice that){
         List<AbcMusic> newSections = new ArrayList<>(sections);
         

@@ -29,5 +29,17 @@ public class AbcMusicTuplet implements AbcMusic{
         
         return startTick;
     }
+    
+    @Override
+    public String toString(){
+        String res = "tuplet("+notes.size()+"): [ ";
+        
+        for(AbcMusic note: notes){
+            res += note.toString()+",";
+        }
+        res += " ]";
+        
+        return res;
+    }
 }
 
