@@ -35,7 +35,7 @@ public interface AbcMusic{
         AbcParser parser = makeParser(input);
         ParseTree tree = parser.root();
         
-//        Trees.inspect(tree, parser);
+        Trees.inspect(tree, parser);
         
         ParseTreeWalker walker = new ParseTreeWalker();
         AbcBuilder builder = new AbcBuilder();
@@ -384,10 +384,11 @@ class AbcBuilder implements AbcListener{
         pushStack(new AbcMusicTuplet(notes, timeOfNotesNum));
     }
     @Override public void exitLength(AbcParser.LengthContext ctx){
-        int a = 1, b = 2;
+        int a = 1, b = 1;
         String len = ctx.getText();
         int div = len.indexOf("/");
         if(div != -1){
+            b = 2;
             if(div+1 < len.length()){
                 b = Integer.valueOf(len.substring(div+1, len.length()));
             }
