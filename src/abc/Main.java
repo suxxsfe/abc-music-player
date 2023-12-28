@@ -5,8 +5,15 @@ import abc.sound.SequencePlayer;
 import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.InvalidMidiDataException;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.BufferedReader;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Queue;
+import java.util.LinkedList;
+import java.io.IOException;
 
 public class Main{
 	public static void main(String argv[]){
@@ -56,22 +63,59 @@ public class Main{
 
         String abc2 = "C C C3/4 D/4 E | E3/4 D/4 E3/4 F/4 G2 |]";
         
-        AbcMusicMain sample = AbcMusic.parse(abcK);
-        
-        List<Character> notes = new ArrayList<>();
-        List<Integer> octave = new ArrayList<>();
-        List<Integer> accidental = new ArrayList<>();
-        List<Integer> start = new ArrayList<>();
-        List<Integer> length = new ArrayList<>();
-        
-        sample.addNotes(notes, octave, accidental, start, length, 0);
-        
-        for(int i = 0; i < notes.size(); i++){
-            System.out.printf("%c trans: %d %d  %d %d\n",
-                    notes.get(i), octave.get(i), accidental.get(i), start.get(i), length.get(i));
+        File file = null;
+        Queue<String> arguments = new LinkedList<String>(Arrays.asList(argv));
+        try{
+            while(!arguments.isEmpty()){
+                String flag = arguments.remove();
+                
+                if(flag.equals("--file")){
+                    file = new File(arguments.remove());
+                    if(!file.isFile()){
+                        throw new IllegalArgumentException("no such file: "+file);
+                    }
+                }
+                else{
+                    throw new IllegalArgumentException("unknown option: "+flag);
+                }
+            }
+        }
+        catch(IllegalArgumentException e){
+            e.printStackTrace();
+            System.err.println(e.getMessage());
+            return;
+        }
+        if(file == null){
+            System.err.println("expected an input file");
+            return;
         }
         
-        try{
+        try(BufferedReader reader = new BufferedReader(new FileReader(file))){
+            String line = reader.readLine();
+            StringBuilder builder = new StringBuilder();
+            while(line != null){
+                builder.append(line);
+                builder.append("\n");
+                line = reader.readLine();
+            }
+            String input = builder.toString();
+            System.out.printf("your abc music: \n%s\n", input);
+        
+            AbcMusicMain sample = AbcMusic.parse(input);
+            
+            List<Character> notes = new ArrayList<>();
+            List<Integer> octave = new ArrayList<>();
+            List<Integer> accidental = new ArrayList<>();
+            List<Integer> start = new ArrayList<>();
+            List<Integer> length = new ArrayList<>();
+            
+            sample.addNotes(notes, octave, accidental, start, length, 0);
+            
+            for(int i = 0; i < notes.size(); i++){
+                System.out.printf("%c trans: %d %d  %d %d\n",
+                        notes.get(i), octave.get(i), accidental.get(i), start.get(i), length.get(i));
+            }
+        
             SequencePlayer player = SequenceAdder.add(notes, octave, accidental, start, length,
                                          sample.getBeatsPerMinute(), sample.getTicksPerBeat());
             
@@ -80,7 +124,7 @@ public class Main{
 //            System.out.println(player);
             player.play();
         }
-        catch(MidiUnavailableException | InvalidMidiDataException e){
+        catch(MidiUnavailableException | InvalidMidiDataException | IOException e){
             e.printStackTrace();
         }
 	}
