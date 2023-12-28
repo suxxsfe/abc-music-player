@@ -62,4 +62,8 @@ public class AbcMusicMain implements AbcMusic{
         return tickPerMinute/tickPerNote;
     }
     
+    public String getInfo(){
+        return "index: "+index+"\ntitle: "+title+"\ncomposer: "+composer;
+    }
+    
 }

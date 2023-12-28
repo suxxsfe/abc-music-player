@@ -36,7 +36,7 @@ public interface AbcMusic{
         AbcParser parser = makeParser(input);
         ParseTree tree = parser.root();
         
-        Trees.inspect(tree, parser);
+//        Trees.inspect(tree, parser);
         
         ParseTreeWalker walker = new ParseTreeWalker();
         AbcBuilder builder = new AbcBuilder();

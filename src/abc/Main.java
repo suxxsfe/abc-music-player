@@ -111,16 +111,17 @@ public class Main{
             
             sample.addNotes(notes, octave, accidental, start, length, 0);
             
-            for(int i = 0; i < notes.size(); i++){
-                System.out.printf("%c trans: %d %d  %d %d\n",
-                        notes.get(i), octave.get(i), accidental.get(i), start.get(i), length.get(i));
-            }
-        
+//            for(int i = 0; i < notes.size(); i++){
+//                System.out.printf("%c trans: %d %d  %d %d\n",
+//                        notes.get(i), octave.get(i), accidental.get(i), start.get(i), length.get(i));
+//            }
+//        
             SequencePlayer player = SequenceAdder.add(notes, octave, accidental, start, length,
                                          sample.getBeatsPerMinute(), sample.getTicksPerBeat());
             
             System.out.printf("speed: %d ticks/beat  %d beat/minute\n",
                             sample.getTicksPerBeat(), sample.getBeatsPerMinute());
+            System.out.println(sample.getInfo());
 //            System.out.println(player);
             player.play();
         }
