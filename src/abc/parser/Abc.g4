@@ -10,40 +10,40 @@ root: head body EOF;
 
 head: x t (c | l | m | q | v)* k;
 
-ACCIDENTAL: '^' | '^^' | '_' | '__' | '=';
-
-x: 'X:' NUMBER NEWLINE;
-t: 'T:' (LETTER | NUMBER | CHAR | SPACES | NOTECHAR)+ NEWLINE;
-c: 'C:' (LETTER | NUMBER | CHAR | SPACES | NOTECHAR)+ NEWLINE;
-l: 'L:' NUMBER DIV NUMBER NEWLINE;
-m: 'M:' NUMBER DIV NUMBER NEWLINE;
-q: 'Q:' NUMBER DIV NUMBER ACCIDENTAL NUMBER NEWLINE;
-v: 'V:' (LETTER | NUMBER | CHAR | SPACES | NOTECHAR)+ NEWLINE;
-k: 'K:' (LETTER | NUMBER | CHAR | SPACES | NOTECHAR)+ NEWLINE;
-
-REST: 'z';
-DIV: '/';
-NOTECHAR: [a-gA-G];
-TUPLETSIGN: '(2' | '(3' | '(4';
-NUMBER: DIGIT+;
-DIGIT: [0-9];
-LETTER: [a-zA-Z];
-CHAR: [\.\-];
+x: 'X:' SPACES? number NEWLINE;
+t: 'T:' SPACES? string NEWLINE;
+c: 'C:' SPACES? string NEWLINE;
+l: 'L:' SPACES? number DIV number NEWLINE;
+m: 'M:' SPACES? number DIV number NEWLINE;
+q: 'Q:' SPACES? number DIV number ACCIDENTAL number NEWLINE;
+v: 'V:' SPACES? string NEWLINE;
+k: 'K:' SPACES? string NEWLINE;
 
 body: voice (voice)* NEWLINE?;
 voice: v? segment+;
-element: SPACES? (rest | note | chord | tuplet) SPACES;
+element: SPACES? (rest | note | chord | tuplet) SPACES?;
 segment: BAR? element+ BAR;
 
 rest: REST length?;
 note: (ACCIDENTAL)? NOTECHAR (OCTAVE)? length?;
 chord: '[' note+ ']';
 tuplet: TUPLETSIGN note+;
-length: NUMBER | (NUMBER? DIV NUMBER?);
+length: number | (number? DIV number?);
 
-BAR: ((('|' | ':|' | '|:') ('[1' | '[2')?) | ('||' | '[|' | '|]')) NEWLINE?;
-OCTAVE: ','+ | '\''+;
+number: DIGIT+;
+string: (ANY | BAR | OCTAVE | ACCIDENTAL | REST | DIV | NOTECHAR | TUPLETSIGN | DIGIT | SPACES)+;
 
 SPACES: [ ]+;
 NEWLINE: '\r'? '\n';
+
+BAR: ((('|' | ':|' | '|:') ('[1' | '[2')?) | ('||' | '[|' | '|]')) NEWLINE?;
+OCTAVE: ','+ | '\''+;
+ACCIDENTAL: '^' | '^^' | '_' | '__' | '=';
+REST: 'z';
+DIV: '/';
+NOTECHAR: [a-gA-G];
+TUPLETSIGN: '(2' | '(3' | '(4';
+DIGIT: [0-9];
+ANY: ~[\r\n];
+COMMENT: '%'  ~('\n' | '\r')* NEWLINE -> skip;
 

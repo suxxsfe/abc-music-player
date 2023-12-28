@@ -178,6 +178,7 @@ class AbcBuilder implements AbcListener{
     private int meterA, meterB, lA, lB, qA, qB, qSpeed;// rational: A/B
     
     private int noteLength;
+    private String lastString;
     private int segmentTicks;
     private Map<String, Integer> accidental = new HashMap<>();
     
@@ -387,10 +388,10 @@ class AbcBuilder implements AbcListener{
         String len = ctx.getText();
         int div = len.indexOf("/");
         if(div != -1){
-            if(div != len.length()){
+            if(div+1 < len.length()){
                 b = Integer.valueOf(len.substring(div+1, len.length()));
             }
-            if(div != 0){
+            if(div > 0){
                 a = Integer.valueOf(len.substring(0, div));
             }
         }
@@ -398,6 +399,9 @@ class AbcBuilder implements AbcListener{
             a = Integer.valueOf(len);
         }
         noteLength = a*tickPerNote/b;
+    }
+    @Override public void exitString(AbcParser.StringContext ctx){
+        lastString = ctx.getText();
     }
     
     
@@ -428,8 +432,8 @@ class AbcBuilder implements AbcListener{
         tickPerMinute = meterB*lB*qA*FACTOR*qSpeed;
         tickPerBar    = meterA*lB*qB*FACTOR;
     }
-    @Override public void enterK(AbcParser.KContext ctx){
-        currentKey = ctx.getText().substring(2, ctx.getText().length()-1);
+    @Override public void exitK(AbcParser.KContext ctx){
+        currentKey = lastString;
         
         if(KEY_SIGNATURE_TRANS.containsKey(currentKey)){
             keySignatureTrans = KEY_SIGNATURE_TRANS.get(currentKey);
@@ -439,45 +443,48 @@ class AbcBuilder implements AbcListener{
             keySignatureTrans = Arrays.asList(0, 0, 0, 0, 0, 0, 0);
         }
     }
-    @Override public void enterX(AbcParser.XContext ctx){
-        index = ctx.NUMBER().getText();
+    @Override public void exitX(AbcParser.XContext ctx){
+        index = ctx.number().getText();
     }
-    @Override public void enterT(AbcParser.TContext ctx){
-        title = ctx.getText().substring(2, ctx.getText().length());
+    @Override public void exitT(AbcParser.TContext ctx){
+        title = lastString;
     }
-    @Override public void enterC(AbcParser.CContext ctx){
-        composer = ctx.getText().substring(2, ctx.getText().length());
+    @Override public void exitC(AbcParser.CContext ctx){
+        composer = lastString;
     }
     @Override public void enterL(AbcParser.LContext ctx){
-        lA = Integer.valueOf(ctx.NUMBER().get(0).getText());
-        lB = Integer.valueOf(ctx.NUMBER().get(1).getText());
+        lA = Integer.valueOf(ctx.number().get(0).getText());
+        lB = Integer.valueOf(ctx.number().get(1).getText());
     }
     @Override public void enterM(AbcParser.MContext ctx){
-        meterA = Integer.valueOf(ctx.NUMBER().get(0).getText());
-        meterB = Integer.valueOf(ctx.NUMBER().get(1).getText());
+        meterA = Integer.valueOf(ctx.number().get(0).getText());
+        meterB = Integer.valueOf(ctx.number().get(1).getText());
     }
     @Override public void enterQ(AbcParser.QContext ctx){
-        qA = Integer.valueOf(ctx.NUMBER().get(0).getText());
-        qB = Integer.valueOf(ctx.NUMBER().get(1).getText());
-        qSpeed = Integer.valueOf(ctx.NUMBER().get(2).getText());
+        qA = Integer.valueOf(ctx.number().get(0).getText());
+        qB = Integer.valueOf(ctx.number().get(1).getText());
+        qSpeed = Integer.valueOf(ctx.number().get(2).getText());
     }
     
     @Override public void enterRoot(AbcParser.RootContext ctx){}
     @Override public void exitQ(AbcParser.QContext ctx){}
     @Override public void enterV(AbcParser.VContext ctx){}
     @Override public void exitV(AbcParser.VContext ctx){}
-    @Override public void exitK(AbcParser.KContext ctx){}
+    @Override public void enterK(AbcParser.KContext ctx){}
     @Override public void exitVoice(AbcParser.VoiceContext ctx){}
     @Override public void enterLength(AbcParser.LengthContext ctx){}
     @Override public void enterTuplet(AbcParser.TupletContext ctx){}
+    @Override public void enterString(AbcParser.StringContext ctx){}
     @Override public void enterChord(AbcParser.ChordContext ctx){}
     @Override public void enterElement(AbcParser.ElementContext ctx){}
     @Override public void exitElement(AbcParser.ElementContext ctx){}
     @Override public void enterRest(AbcParser.RestContext ctx){}
     @Override public void enterNote(AbcParser.NoteContext ctx){}
-    @Override public void exitX(AbcParser.XContext ctx){}
-    @Override public void exitT(AbcParser.TContext ctx){}
-    @Override public void exitC(AbcParser.CContext ctx){}
+    @Override public void enterNumber(AbcParser.NumberContext ctx){}
+    @Override public void exitNumber(AbcParser.NumberContext ctx){}
+    @Override public void enterX(AbcParser.XContext ctx){}
+    @Override public void enterT(AbcParser.TContext ctx){}
+    @Override public void enterC(AbcParser.CContext ctx){}
     @Override public void exitL(AbcParser.LContext ctx){}
     @Override public void exitM(AbcParser.MContext ctx){}
     

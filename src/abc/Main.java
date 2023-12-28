@@ -99,7 +99,7 @@ public class Main{
                 line = reader.readLine();
             }
             String input = builder.toString();
-            System.out.printf("your abc music: \n%s\n", input);
+            System.out.printf("your abc music: \n%s", input);
         
             AbcMusicMain sample = AbcMusic.parse(input);
             
