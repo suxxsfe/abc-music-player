@@ -452,22 +452,35 @@ class AbcBuilder implements AbcListener{
     @Override public void exitC(AbcParser.CContext ctx){
         composer = lastString;
     }
-    @Override public void enterL(AbcParser.LContext ctx){
+    @Override public void exitL(AbcParser.LContext ctx){
         lA = Integer.valueOf(ctx.number().get(0).getText());
         lB = Integer.valueOf(ctx.number().get(1).getText());
     }
-    @Override public void enterM(AbcParser.MContext ctx){
-        meterA = Integer.valueOf(ctx.number().get(0).getText());
-        meterB = Integer.valueOf(ctx.number().get(1).getText());
+    @Override public void exitM(AbcParser.MContext ctx){
+        if(ctx.number() != null && ctx.number().size() != 0){
+            meterA = Integer.valueOf(ctx.number().get(0).getText());
+            meterB = Integer.valueOf(ctx.number().get(1).getText());
+        }
+        else{
+            if(lastString.equals("C")){
+                meterA = meterB = 4;
+            }
+            else if(lastString.equals("C|")){
+                meterA = meterB = 2;
+            }
+            else{
+               System.err.printf("unknow meter"); 
+            }
+        }
     }
-    @Override public void enterQ(AbcParser.QContext ctx){
+    @Override public void exitQ(AbcParser.QContext ctx){
         qA = Integer.valueOf(ctx.number().get(0).getText());
         qB = Integer.valueOf(ctx.number().get(1).getText());
         qSpeed = Integer.valueOf(ctx.number().get(2).getText());
     }
     
     @Override public void enterRoot(AbcParser.RootContext ctx){}
-    @Override public void exitQ(AbcParser.QContext ctx){}
+    @Override public void enterQ(AbcParser.QContext ctx){}
     @Override public void enterV(AbcParser.VContext ctx){}
     @Override public void exitV(AbcParser.VContext ctx){}
     @Override public void enterK(AbcParser.KContext ctx){}
@@ -485,8 +498,8 @@ class AbcBuilder implements AbcListener{
     @Override public void enterX(AbcParser.XContext ctx){}
     @Override public void enterT(AbcParser.TContext ctx){}
     @Override public void enterC(AbcParser.CContext ctx){}
-    @Override public void exitL(AbcParser.LContext ctx){}
-    @Override public void exitM(AbcParser.MContext ctx){}
+    @Override public void enterL(AbcParser.LContext ctx){}
+    @Override public void enterM(AbcParser.MContext ctx){}
     
     @Override public void enterBody(AbcParser.BodyContext ctx){}
     @Override public void exitBody(AbcParser.BodyContext ctx){}

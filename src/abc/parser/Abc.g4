@@ -14,7 +14,7 @@ x: 'X:' SPACES? number NEWLINE;
 t: 'T:' SPACES? string NEWLINE;
 c: 'C:' SPACES? string NEWLINE;
 l: 'L:' SPACES? number DIV number NEWLINE;
-m: 'M:' SPACES? number DIV number NEWLINE;
+m: 'M:' SPACES? ((number DIV number) | string) NEWLINE;
 q: 'Q:' SPACES? number DIV number ACCIDENTAL number NEWLINE;
 v: 'V:' SPACES? string NEWLINE;
 k: 'K:' SPACES? string NEWLINE;
