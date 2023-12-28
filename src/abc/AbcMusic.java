@@ -384,7 +384,7 @@ class AbcBuilder implements AbcListener{
         pushStack(new AbcMusicTuplet(notes, timeOfNotesNum));
     }
     @Override public void exitLength(AbcParser.LengthContext ctx){
-        int a = 1, b = 1;
+        int a = 1, b = 2;
         String len = ctx.getText();
         int div = len.indexOf("/");
         if(div != -1){
