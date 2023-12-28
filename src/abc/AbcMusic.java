@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Stack;
 import java.util.Collections;
+import java.util.ListIterator;
 
 import org.antlr.v4.gui.Trees;
 import org.antlr.v4.runtime.CharStream;
@@ -179,7 +180,7 @@ class AbcBuilder implements AbcListener{
     
     private int noteLength;
     private String lastString;
-    private int segmentTicks;
+    private int segmentTicks, segmentElementsNum;
     private Map<String, Integer> accidental = new HashMap<>();
     
     private Map<String, VoiceStatus> voicesStatus = new HashMap<>();
@@ -218,23 +219,23 @@ class AbcBuilder implements AbcListener{
         return keySignatureTrans.get((int)(noteChar-'A'));
     }
     
-    private boolean isSectionBar(String bar){
+    private static boolean isSectionBar(String bar){
         return bar.indexOf("||") != -1 || bar.indexOf("|[") != -1 || bar.indexOf("|]") != -1;
     }
     
-    private boolean isEnd1Bar(String bar){
+    private static boolean isEnd1Bar(String bar){
         return bar.indexOf("[1") != -1;
     }
     
-    private boolean isEnd2Bar(String bar){
+    private static boolean isEnd2Bar(String bar){
         return bar.indexOf("[2") != -1;
     }
     
-    private boolean isRepeatStartBar(String bar){
+    private static boolean isRepeatStartBar(String bar){
         return bar.indexOf("|:") != -1;
     }
     
-    private boolean isRepeatEndBar(String bar){
+    private static boolean isRepeatEndBar(String bar){
         return bar.indexOf(":|") != -1;
     }
     
@@ -260,6 +261,7 @@ class AbcBuilder implements AbcListener{
     private void clearSegmentInfo(){
         accidental.clear();
         segmentTicks = 0;
+        segmentElementsNum = 0;
     }
     
     private String getVoiceName(AbcParser.VContext ctx){
@@ -269,15 +271,34 @@ class AbcBuilder implements AbcListener{
     
     private void pushStack(AbcMusic element){
         segmentTicks += element.getLength();
+        segmentElementsNum++;
         status.pushStack(element);
     }
     
     private AbcMusic popStack(){
         AbcMusic res = status.popStack();
         segmentTicks -= res.getLength();
+        segmentElementsNum--;
         return res;
     }
     
+    private void pushFrontOfSegment(AbcMusic el){
+        List<AbcMusic> tmp = new ArrayList<>();
+        
+        while(segmentElementsNum > 0){
+            tmp.add(popStack());
+        }
+        pushStack(el);
+        ListIterator<AbcMusic> listit = tmp.listIterator(tmp.size());
+        while(listit.hasPrevious()){
+            pushStack(listit.previous());
+        }
+        
+    }
+    
+    private boolean isFirstSegment(){
+        return segmentElementsNum == status.getElementsNumInSection();
+    }
     
     @Override public void exitRoot(AbcParser.RootContext ctx){
         List<AbcMusicVoice> voices = new ArrayList<>();
@@ -291,7 +312,7 @@ class AbcBuilder implements AbcListener{
             }
         }
         
-        System.out.printf("%s\n", voices.get(0).toString());
+//        System.out.printf("%s\n", voices.get(0).toString());
         
         parseResult = new AbcMusicMain(voices, title, index, composer,
                                 tickPerNote, tickPerBar, tickPerMinute);
@@ -314,11 +335,18 @@ class AbcBuilder implements AbcListener{
     }
     @Override public void exitSegment(AbcParser.SegmentContext ctx){
         if(segmentTicks < tickPerBar){
-            pushStack(new AbcMusicRest(tickPerBar-segmentTicks));
+            AbcMusicRest rest = new AbcMusicRest(tickPerBar-segmentTicks);
+            if(isFirstSegment()){
+                pushFrontOfSegment(rest);
+            }
+            else{
+                pushStack(rest);
+            }
         }
         else if(segmentTicks > tickPerBar){
-            System.out.println("fuck you too long segment");
-            System.out.println(ctx.getText());
+            System.err.println("fuck you too long segment");
+            System.err.println(ctx.getText());
+            System.err.printf("tickPerNote: %d  tickPerBar: %d  segmentTicks: %d\n", tickPerNote, tickPerBar, segmentTicks);
         }
   
         String bar = ctx.BAR().get(ctx.BAR().size()-1).getText();
@@ -378,7 +406,7 @@ class AbcBuilder implements AbcListener{
             timeOfNotesNum = TUPLETS_LENGTH.get(notesNum);
         }
         else{
-            System.out.println("fuck you tuplet type not supported");
+            System.err.println("fuck you tuplet type not supported");
         }
         
         pushStack(new AbcMusicTuplet(notes, timeOfNotesNum));
@@ -440,7 +468,7 @@ class AbcBuilder implements AbcListener{
             keySignatureTrans = KEY_SIGNATURE_TRANS.get(currentKey);
         }
         else{
-            System.out.printf("unknow key signature %s\n", currentKey);
+            System.err.printf("unknow key signature %s\n", currentKey);
             keySignatureTrans = Arrays.asList(0, 0, 0, 0, 0, 0, 0);
         }
     }
