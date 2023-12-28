@@ -34,7 +34,7 @@ number: DIGIT+;
 string: (ANY | BAR | OCTAVE | ACCIDENTAL | REST | DIV | NOTECHAR | TUPLETSIGN | DIGIT | SPACES)+;
 
 SPACES: [ ]+;
-NEWLINE: '\r'? '\n';
+NEWLINE: SPACES? '\r'? '\n';
 
 BAR: ((('|' | ':|' | '|:') ('[1' | '[2')?) | ('||' | '[|' | '|]')) NEWLINE?;
 OCTAVE: ','+ | '\''+;
