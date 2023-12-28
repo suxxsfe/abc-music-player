@@ -2,6 +2,7 @@ package abc;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Stack;
@@ -73,6 +74,7 @@ class VoiceStatus{
     
     public VoiceStatus(String name){
         this.name = name;
+        end1 = end2 = -1;
     }
     
     public String getName(){
@@ -120,6 +122,9 @@ class VoiceStatus{
     public AbcMusicVoice getMusic(){
         List<AbcMusic> sections = new ArrayList<>();
         
+        if(!(stack.peek() instanceof AbcMusicSection)){
+            makeSection();
+        }
         while(!stack.empty()){
             sections.add(stack.pop());
         }
@@ -151,6 +156,22 @@ class AbcBuilder implements AbcListener{
         put(3, 2);
         put(4, 3);
     }};
+    private static final Map<String, List<Integer> > KEY_SIGNATURE_TRANS = new HashMap<String, List<Integer> >(){{
+        put("C",  Arrays.asList(0,  0,   0, 0,  0,  0,  0));
+        put("G",  Arrays.asList(0,  0,   0, 0,  0,  1,  0));
+        put("D",  Arrays.asList(0,  0,   1, 0,  0,  1,  0));
+        put("A",  Arrays.asList(0,  0,   1, 0,  0,  1,  1));
+        put("E",  Arrays.asList(0,  0,   1, 1,  0,  1,  1));
+        put("B",  Arrays.asList(1,  0,   1, 1,  0,  1,  1));
+        put("F#", Arrays.asList(1,  0,   1, 1,  1,  1,  1));
+        put("F",  Arrays.asList(0,  -1,  0, 0,  0,  0,  0));
+        put("Bb", Arrays.asList(0,  -1,  0, 0,  -1, 0,  0));
+        put("Eb", Arrays.asList(-1, -1,  0, 0,  -1, 0,  0));
+        put("Ab", Arrays.asList(-1, -1,  0, -1, -1, 0,  0));
+        put("Db", Arrays.asList(-1, -1,  0, -1, -1, 0,  -1));
+        put("Gb", Arrays.asList(-1, -1, -1, -1, -1, 0,  -1));
+        put("Cb", Arrays.asList(-1, -1, -1, -1, -1, -1, -1));
+    }};
     
     private int tickPerNote, tickPerMinute, tickPerBar;
     private String title, composer, index;
@@ -163,6 +184,8 @@ class AbcBuilder implements AbcListener{
     private Map<String, VoiceStatus> voicesStatus = new HashMap<>();
     private VoiceStatus status = null;
     private String currentVoice;
+    private List<Integer> keySignatureTrans = null;
+    private String currentKey;
     
     private AbcMusicMain parseResult;
     
@@ -174,6 +197,24 @@ class AbcBuilder implements AbcListener{
             return -acci.length();
         }
         return 0;
+    }
+    
+    private static boolean isNoteChar(char c){
+        return c >= 'A' && c <= 'G';
+    }
+    
+    private int getAccidental(String note, char noteChar, TerminalNode acci){
+        if(acci != null){
+            accidental.put(note, getAccidentalValue(acci.getText()));
+        }
+        
+        if(accidental.containsKey(note)){
+            return accidental.get(note);
+        }
+        if(!isNoteChar(noteChar)){
+            return 0;
+        }
+        return keySignatureTrans.get((int)(noteChar-'A'));
     }
     
     private boolean isSectionBar(String bar){
@@ -194,6 +235,21 @@ class AbcBuilder implements AbcListener{
     
     private boolean isRepeatEndBar(String bar){
         return bar.indexOf(":|") != -1;
+    }
+    
+    private void checkRepeat(String bar, int currentNum){
+        if(isRepeatStartBar(bar)){
+            status.addStart(currentNum);
+        }
+        else if(isRepeatEndBar(bar)){
+            status.addEnd(currentNum-1);
+        }
+        if(isEnd1Bar(bar)){
+            status.setEnd1(currentNum);
+        }
+        else if(isEnd2Bar(bar)){
+            status.setEnd2(currentNum);
+        }
     }
     
     public AbcMusicMain getAbcMusic(){
@@ -234,6 +290,8 @@ class AbcBuilder implements AbcListener{
             }
         }
         
+        System.out.printf("%s\n", voices.get(0).toString());
+        
         parseResult = new AbcMusicMain(voices, title, index, composer,
                                 tickPerNote, tickPerBar, tickPerMinute);
     }
@@ -247,19 +305,10 @@ class AbcBuilder implements AbcListener{
     }
     @Override public void enterSegment(AbcParser.SegmentContext ctx){
         clearSegmentInfo();
-        String bar = ctx.BAR().getText();
-        int currentNum = status.getElementsNumInSection();
-        if(isRepeatStartBar(bar)){
-            status.addStart(currentNum);
-        }
-        else if(isRepeatEndBar(bar)){
-            status.addEnd(currentNum-1);
-        }
-        if(isEnd1Bar(bar)){
-            status.setEnd1(currentNum);
-        }
-        else if(isEnd2Bar(bar)){
-            status.setEnd2(currentNum);
+        if(ctx.BAR().size() > 1){
+            String bar = ctx.BAR().get(0).getText();
+            int currentNum = status.getElementsNumInSection();
+            checkRepeat(bar, currentNum);
         }
     }
     @Override public void exitSegment(AbcParser.SegmentContext ctx){
@@ -271,10 +320,13 @@ class AbcBuilder implements AbcListener{
             System.out.println(ctx.getText());
         }
   
-        if(isSectionBar(ctx.BAR().getText())){
+        String bar = ctx.BAR().get(ctx.BAR().size()-1).getText();
+        int currentNum = status.getElementsNumInSection();
+        if(isSectionBar(bar)){
             status.makeSection();
             status.clearSectionInfo();
         }
+        checkRepeat(bar, currentNum);
     }
     
     
@@ -291,14 +343,11 @@ class AbcBuilder implements AbcListener{
                       *(ctx.OCTAVE().getText().charAt(0) == '\'' ? 1 : -1);
             noteString += ctx.OCTAVE().getText();
         }
-        if(ctx.ACCIDENTAL() != null){
-            accidental.put(noteString, getAccidentalValue(ctx.ACCIDENTAL().getText()));
-        }
         
         pushStack(new AbcMusicNote(
             Character.toUpperCase(note),
             octave,
-            accidental.containsKey(noteString) ? accidental.get(noteString) : 0,
+            getAccidental(noteString, note, ctx.ACCIDENTAL()),
             ctx.length() != null ? noteLength : tickPerNote
         ));
         
@@ -379,6 +428,17 @@ class AbcBuilder implements AbcListener{
         tickPerMinute = meterB*lB*qA*FACTOR*qSpeed;
         tickPerBar    = meterA*lB*qB*FACTOR;
     }
+    @Override public void enterK(AbcParser.KContext ctx){
+        currentKey = ctx.getText().substring(2, ctx.getText().length()-1);
+        
+        if(KEY_SIGNATURE_TRANS.containsKey(currentKey)){
+            keySignatureTrans = KEY_SIGNATURE_TRANS.get(currentKey);
+        }
+        else{
+            System.out.printf("unknow key signature %s\n", currentKey);
+            keySignatureTrans = Arrays.asList(0, 0, 0, 0, 0, 0, 0);
+        }
+    }
     @Override public void enterX(AbcParser.XContext ctx){
         index = ctx.NUMBER().getText();
     }
@@ -406,8 +466,8 @@ class AbcBuilder implements AbcListener{
     @Override public void exitQ(AbcParser.QContext ctx){}
     @Override public void enterV(AbcParser.VContext ctx){}
     @Override public void exitV(AbcParser.VContext ctx){}
-    @Override public void enterK(AbcParser.KContext ctx){}
     @Override public void exitK(AbcParser.KContext ctx){}
+    @Override public void exitVoice(AbcParser.VoiceContext ctx){}
     @Override public void enterLength(AbcParser.LengthContext ctx){}
     @Override public void enterTuplet(AbcParser.TupletContext ctx){}
     @Override public void enterChord(AbcParser.ChordContext ctx){}
@@ -415,7 +475,6 @@ class AbcBuilder implements AbcListener{
     @Override public void exitElement(AbcParser.ElementContext ctx){}
     @Override public void enterRest(AbcParser.RestContext ctx){}
     @Override public void enterNote(AbcParser.NoteContext ctx){}
-    @Override public void exitVoice(AbcParser.VoiceContext ctx){}
     @Override public void exitX(AbcParser.XContext ctx){}
     @Override public void exitT(AbcParser.TContext ctx){}
     @Override public void exitC(AbcParser.CContext ctx){}

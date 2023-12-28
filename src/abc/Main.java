@@ -44,10 +44,19 @@ public class Main{
                          +"z D7 z D7 | z E7 z E7 |]\n"
                          +"V: lower\n"
                          +"B,8 B,8 | C8 C8 |]\n";
+        String abcK = "X:1\n"
+                     +"T:Speed the Plough\n"
+                     +"M:4/4\n"
+                     +"C:Trad.\n"
+                     +"K:G\n"
+                     +"|: G A B c | d e d B | c2 e c | c2 A2 |\n"
+                     +"  G A B c | d e d B | c2 e c | A2 F2 :|\n"
+                     +"|: g2 g f | g2 f2 | c2 e c | c2 A2 |\n"
+                     +"  g2 g f | g2 f2 | c2 e c | A2 F2 :|\n";
 
         String abc2 = "C C C3/4 D/4 E | E3/4 D/4 E3/4 F/4 G2 |]";
         
-        AbcMusicMain sample = AbcMusic.parse(abcVoice);
+        AbcMusicMain sample = AbcMusic.parse(abcK);
         
         List<Character> notes = new ArrayList<>();
         List<Integer> octave = new ArrayList<>();

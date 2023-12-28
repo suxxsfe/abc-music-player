@@ -74,7 +74,12 @@ public class AbcMusicSection implements AbcMusic{
         for(AbcMusic note: notes){
             res += note.toString()+" ";
         }
-        res += "\n";
+        res += "\n(";
+        res += "starts: "+repeatStarts.toString();
+        res += " ends: "+repeatEnds.toString();
+        res += " end1: "+end1;
+        res += " end2: "+end2;
+        res += ")\n";
         
         return res;
     }

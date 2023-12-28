@@ -19,7 +19,7 @@ l: 'L:' NUMBER DIV NUMBER NEWLINE;
 m: 'M:' NUMBER DIV NUMBER NEWLINE;
 q: 'Q:' NUMBER DIV NUMBER ACCIDENTAL NUMBER NEWLINE;
 v: 'V:' (LETTER | NUMBER | CHAR | SPACES | NOTECHAR)+ NEWLINE;
-k: 'K:C' NEWLINE;
+k: 'K:' (LETTER | NUMBER | CHAR | SPACES | NOTECHAR)+ NEWLINE;
 
 REST: 'z';
 DIV: '/';
@@ -33,7 +33,7 @@ CHAR: [\.\-];
 body: voice (voice)* NEWLINE?;
 voice: v? segment+;
 element: SPACES? (rest | note | chord | tuplet) SPACES;
-segment : element+ BAR;
+segment: BAR? element+ BAR;
 
 rest: REST length?;
 note: (ACCIDENTAL)? NOTECHAR (OCTAVE)? length?;

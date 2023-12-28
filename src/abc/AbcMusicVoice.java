@@ -32,7 +32,7 @@ public class AbcMusicVoice implements AbcMusic{
         String res = "voice "+name+":\n";
         
         for(AbcMusic section: sections){
-            res += sections;
+            res += section;
         }
         
         return res;
